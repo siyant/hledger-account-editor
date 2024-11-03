@@ -1,5 +1,6 @@
 import React, { useState, useCallback, ChangeEvent } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { SelectCombobox } from "@/components/ui/select-combobox";
 
 interface Account {
   account: string;
@@ -134,19 +135,15 @@ const HledgerEditor: React.FC = () => {
                   <div className="font-mono text-sm">{transaction.header}</div>
                   {transaction.accounts.map((account, aIndex) => (
                     <div key={aIndex} className="flex items-center space-x-2">
-                      <select
-                        className="flex-1 p-1 text-sm border rounded"
+                      <SelectCombobox
+                        options={accountOptions}
                         value={account.account}
-                        onChange={(e) =>
-                          updateAccount(tIndex, aIndex, e.target.value)
+                        onChange={(value) =>
+                          updateAccount(tIndex, aIndex, value)
                         }
-                      >
-                        {accountOptions.map((option) => (
-                          <option key={option} value={option}>
-                            {option}
-                          </option>
-                        ))}
-                      </select>
+                        placeholder="Select account"
+                        className="flex-1"
+                      />
                       <span className="font-mono text-sm">
                         {account.amount}
                       </span>
