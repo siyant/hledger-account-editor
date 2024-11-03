@@ -1,4 +1,4 @@
-import React, { useState, useCallback, ChangeEvent } from "react";
+import React, { useState, useCallback, ChangeEvent, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { SelectCombobox } from "@/components/ui/select-combobox";
 
@@ -14,16 +14,49 @@ interface Transaction {
   startLine: number;
 }
 
+// Storage keys
+const STORAGE_KEYS = {
+  TRANSACTIONS_TEXT: "hledger-transactions-text",
+  ACCOUNT_OPTIONS_TEXT: "hledger-account-options-text",
+};
+
 const HledgerEditor: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [inputText, setInputText] = useState<string>("");
   const [accountOptionsText, setAccountOptionsText] = useState<string>("");
   const [accountOptions, setAccountOptions] = useState<string[]>([]);
 
+  // Load saved data on component mount
+  useEffect(() => {
+    const savedTransactionsText = localStorage.getItem(
+      STORAGE_KEYS.TRANSACTIONS_TEXT,
+    );
+    const savedAccountOptionsText = localStorage.getItem(
+      STORAGE_KEYS.ACCOUNT_OPTIONS_TEXT,
+    );
+
+    if (savedTransactionsText) {
+      setInputText(savedTransactionsText);
+      setTransactions(parseTransactions(savedTransactionsText));
+    }
+
+    if (savedAccountOptionsText) {
+      setAccountOptionsText(savedAccountOptionsText);
+      // Split by newlines and filter out empty lines
+      const options = savedAccountOptionsText
+        .split("\n")
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0);
+      setAccountOptions(options);
+    }
+  }, []);
+
   // Parse account options from textarea
   const handleAccountOptionsChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     const text = e.target.value;
     setAccountOptionsText(text);
+    localStorage.setItem(STORAGE_KEYS.ACCOUNT_OPTIONS_TEXT, text);
+
     // Split by newlines and filter out empty lines
     const options = text
       .split("\n")
@@ -97,13 +130,16 @@ const HledgerEditor: React.FC = () => {
     lines[accountLine.line] = `${spaces}${newAccount}${" ".repeat(
       Math.max(0, 30 - newAccount.length),
     )}${accountLine.amount}`;
-    setInputText(lines.join("\n"));
+    const newText = lines.join("\n");
+    setInputText(newText);
+    localStorage.setItem(STORAGE_KEYS.TRANSACTIONS_TEXT, newText);
   };
 
   // Handle input text changes
   const handleInputChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     const newText = e.target.value;
     setInputText(newText);
+    localStorage.setItem(STORAGE_KEYS.TRANSACTIONS_TEXT, newText);
     setTransactions(parseTransactions(newText));
   };
 
