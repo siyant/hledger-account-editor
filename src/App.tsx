@@ -1,6 +1,6 @@
 import React, { useState, useCallback, ChangeEvent, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { SelectCombobox } from "@/components/ui/select-combobox";
+import Select from "react-select";
 
 interface Account {
   account: string;
@@ -14,6 +14,11 @@ interface Transaction {
   startLine: number;
 }
 
+interface AccountOption {
+  value: string;
+  label: string;
+}
+
 // Storage keys
 const STORAGE_KEYS = {
   TRANSACTIONS_TEXT: "hledger-transactions-text",
@@ -24,7 +29,7 @@ const HledgerEditor: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [inputText, setInputText] = useState<string>("");
   const [accountOptionsText, setAccountOptionsText] = useState<string>("");
-  const [accountOptions, setAccountOptions] = useState<string[]>([]);
+  const [accountOptions, setAccountOptions] = useState<AccountOption[]>([]);
 
   // Load saved data on component mount
   useEffect(() => {
@@ -46,7 +51,8 @@ const HledgerEditor: React.FC = () => {
       const options = savedAccountOptionsText
         .split("\n")
         .map((line) => line.trim())
-        .filter((line) => line.length > 0);
+        .filter((line) => line.length > 0)
+        .map((line) => ({ value: line, label: line }));
       setAccountOptions(options);
     }
   }, []);
@@ -61,7 +67,8 @@ const HledgerEditor: React.FC = () => {
     const options = text
       .split("\n")
       .map((line) => line.trim())
-      .filter((line) => line.length > 0);
+      .filter((line) => line.length > 0)
+      .map((line) => ({ value: line, label: line }));
     setAccountOptions(options);
   };
 
@@ -114,11 +121,13 @@ const HledgerEditor: React.FC = () => {
   const updateAccount = (
     transactionIndex: number,
     accountIndex: number,
-    newAccount: string,
+    selectedOption: AccountOption | null,
   ) => {
+    if (!selectedOption) return;
+
     const updatedTransactions = [...transactions];
     updatedTransactions[transactionIndex].accounts[accountIndex].account =
-      newAccount;
+      selectedOption.value;
     setTransactions(updatedTransactions);
 
     // Update the input text
@@ -127,8 +136,8 @@ const HledgerEditor: React.FC = () => {
     const accountLine = transaction.accounts[accountIndex];
     const spacesMatch = lines[accountLine.line].match(/^\s+/);
     const spaces = spacesMatch ? spacesMatch[0] : "    ";
-    lines[accountLine.line] = `${spaces}${newAccount}${" ".repeat(
-      Math.max(2, 30 - newAccount.length),
+    lines[accountLine.line] = `${spaces}${selectedOption.value}${" ".repeat(
+      Math.max(2, 30 - selectedOption.value.length),
     )}${accountLine.amount}`;
     const newText = lines.join("\n");
     setInputText(newText);
@@ -165,20 +174,36 @@ const HledgerEditor: React.FC = () => {
                 placeholder="Paste your account names here (one per line)..."
               />
             </div>
-            <div className="space-y-4 overflow-auto h-[82vh]">
+            <div className="space-y-4 overflow-auto h-[82vh] text-sm">
               {transactions.map((transaction, tIndex) => (
                 <div key={tIndex} className="border rounded p-4 space-y-2">
-                  <div className="font-mono text-sm">{transaction.header}</div>
+                  <div className="font-semibold">{transaction.header}</div>
                   {transaction.accounts.map((account, aIndex) => (
-                    <div key={aIndex} className="flex items-center space-x-2">
-                      <SelectCombobox
+                    <div
+                      key={aIndex}
+                      className="flex items-center justify-between space-x-2 w-[420px]"
+                    >
+                      <Select
                         options={accountOptions}
-                        value={account.account}
-                        onChange={(value) =>
-                          updateAccount(tIndex, aIndex, value)
+                        value={accountOptions.find(
+                          (option) => option.value === account.account,
+                        )}
+                        onChange={(option) =>
+                          updateAccount(tIndex, aIndex, option)
                         }
                         placeholder="Select account"
-                        className="flex-1"
+                        className="w-[340px]"
+                        styles={{
+                          control: (baseStyles) => ({
+                            ...baseStyles,
+                            minHeight: "unset",
+                          }),
+                          dropdownIndicator: (baseStyles) => ({
+                            ...baseStyles,
+                            paddingTop: 0,
+                            paddingBottom: 0,
+                          }),
+                        }}
                       />
                       <span className="font-mono text-sm">
                         {account.amount}
