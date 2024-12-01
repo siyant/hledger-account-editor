@@ -203,7 +203,7 @@ const HledgerEditor: React.FC = () => {
       >
         <div>
           <div
-            className={`fixed ${sidePanelCollapsed ? "w-[200px]" : "w-[40vw]"} h-[calc(100vh_-_80px)] overflow-auto space-y-4 pr-2 pb-10`}
+            className={`fixed ${sidePanelCollapsed ? "w-[200px]" : "w-[40vw]"} h-[calc(100vh_-_80px)] overflow-auto space-y-4 px-2 pb-10`}
           >
             <div>
               <h2
@@ -222,7 +222,7 @@ const HledgerEditor: React.FC = () => {
                   className="w-full h-[40vh] font-mono text-sm p-2 border rounded"
                   value={inputText}
                   onChange={handleInputChange}
-                  placeholder="Paste your hledger transactions here..."
+                  placeholder="Paste your hledger transactions journal file here"
                 />
               )}
             </div>
@@ -240,12 +240,21 @@ const HledgerEditor: React.FC = () => {
                 Account Names
               </h2>
               {!accountsCollapsed && (
-                <textarea
-                  className="w-full h-[40vh] font-mono text-sm p-2 border rounded"
-                  value={accountOptionsText}
-                  onChange={handleAccountOptionsChange}
-                  placeholder="Paste your account names here (one per line)..."
-                />
+                <>
+                  <p className="text-sm">
+                    Run{" "}
+                    <pre className="inline bg-gray-200 px-1">
+                      hledger accounts | pbcopy
+                    </pre>{" "}
+                    to copy your accounts list
+                  </p>
+                  <textarea
+                    className="w-full h-[40vh] font-mono text-sm p-2 border rounded"
+                    value={accountOptionsText}
+                    onChange={handleAccountOptionsChange}
+                    placeholder="Paste your account names here (one per line)"
+                  />
+                </>
               )}
             </div>
 
