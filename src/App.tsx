@@ -151,71 +151,71 @@ const HledgerEditor: React.FC = () => {
     localStorage.setItem(STORAGE_KEYS.TRANSACTIONS_TEXT, newText);
     setTransactions(parseTransactions(newText));
   };
-
   return (
     <div className="max-w-[1440px] mx-auto p-4 min-h-screen">
-      <Card className="h-full">
-        <CardHeader>
-          <CardTitle>hledger Transaction Editor</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-4">
-              <textarea
-                className="w-full h-[40vh] font-mono text-sm p-2 border rounded"
-                value={inputText}
-                onChange={handleInputChange}
-                placeholder="Paste your hledger transactions here..."
-              />
-              <textarea
-                className="w-full h-[40vh] font-mono text-sm p-2 border rounded"
-                value={accountOptionsText}
-                onChange={handleAccountOptionsChange}
-                placeholder="Paste your account names here (one per line)..."
-              />
-            </div>
-            <div className="space-y-4 overflow-auto h-[82vh] text-sm">
-              {transactions.map((transaction, tIndex) => (
-                <div key={tIndex} className="border rounded p-4 space-y-2">
-                  <div className="font-semibold">{transaction.header}</div>
-                  {transaction.accounts.map((account, aIndex) => (
-                    <div
-                      key={aIndex}
-                      className="flex items-center justify-between space-x-2 w-[420px]"
-                    >
-                      <Select
-                        options={accountOptions}
-                        value={accountOptions.find(
-                          (option) => option.value === account.account,
-                        )}
-                        onChange={(option) =>
-                          updateAccount(tIndex, aIndex, option)
-                        }
-                        placeholder="Select account"
-                        className="w-[340px]"
-                        styles={{
-                          control: (baseStyles) => ({
-                            ...baseStyles,
-                            minHeight: "unset",
-                          }),
-                          dropdownIndicator: (baseStyles) => ({
-                            ...baseStyles,
-                            paddingTop: 0,
-                            paddingBottom: 0,
-                          }),
-                        }}
-                      />
-                      <span className="font-mono text-sm">
-                        {account.amount}
-                      </span>
-                    </div>
-                  ))}
+      <div className="relative h-10 mb-4">
+        <h1 className="text-2xl font-bold fixed w-full">
+          hledger Transaction Editor
+        </h1>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+        <div className="space-y-4 fixed w-[calc(50%-2.5rem)] max-w-[700px]">
+          <div>
+            <h2 className="font-semibold mb-2">Transactions Journal</h2>
+            <textarea
+              className="w-full h-[40vh] font-mono text-sm p-2 border rounded"
+              value={inputText}
+              onChange={handleInputChange}
+              placeholder="Paste your hledger transactions here..."
+            />
+          </div>
+          <div>
+            <h2 className="font-semibold mb-2">Account Names</h2>
+            <textarea
+              className="w-full h-[40vh] font-mono text-sm p-2 border rounded"
+              value={accountOptionsText}
+              onChange={handleAccountOptionsChange}
+              placeholder="Paste your account names here (one per line)..."
+            />
+          </div>
+        </div>
+        <div className="md:col-start-2 space-y-4">
+          <h2 className="font-semibold mb-2">Transactions Editor</h2>
+          {transactions.map((transaction, tIndex) => (
+            <div key={tIndex} className="space-y-1 text-sm">
+              <div className="font-semibold">{transaction.header}</div>
+              {transaction.accounts.map((account, aIndex) => (
+                <div
+                  key={aIndex}
+                  className="flex items-center justify-between space-x-2 w-[420px]"
+                >
+                  <Select
+                    options={accountOptions}
+                    value={accountOptions.find(
+                      (option) => option.value === account.account,
+                    )}
+                    onChange={(option) => updateAccount(tIndex, aIndex, option)}
+                    placeholder="Select account"
+                    className="w-[340px]"
+                    styles={{
+                      control: (baseStyles) => ({
+                        ...baseStyles,
+                        minHeight: "unset",
+                      }),
+                      dropdownIndicator: (baseStyles) => ({
+                        ...baseStyles,
+                        paddingTop: 0,
+                        paddingBottom: 0,
+                      }),
+                    }}
+                  />
+                  <span className="font-mono text-sm">{account.amount}</span>
                 </div>
               ))}
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
