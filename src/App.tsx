@@ -128,7 +128,7 @@ const HledgerEditor: React.FC = () => {
     const spacesMatch = lines[accountLine.line].match(/^\s+/);
     const spaces = spacesMatch ? spacesMatch[0] : "    ";
     lines[accountLine.line] = `${spaces}${newAccount}${" ".repeat(
-      Math.max(0, 30 - newAccount.length),
+      Math.max(2, 30 - newAccount.length),
     )}${accountLine.amount}`;
     const newText = lines.join("\n");
     setInputText(newText);
