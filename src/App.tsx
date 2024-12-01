@@ -23,6 +23,8 @@ interface AccountOption {
 const STORAGE_KEYS = {
   TRANSACTIONS_TEXT: "hledger-transactions-text",
   ACCOUNT_OPTIONS_TEXT: "hledger-account-options-text",
+  FIXED_ACCOUNT: "hledger-fixed-account",
+  HIGHLIGHTED_ACCOUNT: "hledger-highlighted-account",
 };
 
 const HledgerEditor: React.FC = () => {
@@ -32,6 +34,10 @@ const HledgerEditor: React.FC = () => {
   const [accountOptions, setAccountOptions] = useState<AccountOption[]>([]);
   const [journalCollapsed, setJournalCollapsed] = useState(false);
   const [accountsCollapsed, setAccountsCollapsed] = useState(false);
+  const [configCollapsed, setConfigCollapsed] = useState(false);
+  const [fixedAccount, setFixedAccount] = useState<AccountOption | null>(null);
+  const [highlightedAccount, setHighlightedAccount] =
+    useState<AccountOption | null>(null);
 
   // Load saved data on component mount
   useEffect(() => {
@@ -40,6 +46,10 @@ const HledgerEditor: React.FC = () => {
     );
     const savedAccountOptionsText = localStorage.getItem(
       STORAGE_KEYS.ACCOUNT_OPTIONS_TEXT,
+    );
+    const savedFixedAccount = localStorage.getItem(STORAGE_KEYS.FIXED_ACCOUNT);
+    const savedHighlightedAccount = localStorage.getItem(
+      STORAGE_KEYS.HIGHLIGHTED_ACCOUNT,
     );
 
     if (savedTransactionsText) {
@@ -56,6 +66,20 @@ const HledgerEditor: React.FC = () => {
         .filter((line) => line.length > 0)
         .map((line) => ({ value: line, label: line }));
       setAccountOptions(options);
+
+      if (savedFixedAccount) {
+        const fixedOption = options.find(
+          (opt) => opt.value === savedFixedAccount,
+        );
+        if (fixedOption) setFixedAccount(fixedOption);
+      }
+
+      if (savedHighlightedAccount) {
+        const highlightOption = options.find(
+          (opt) => opt.value === savedHighlightedAccount,
+        );
+        if (highlightOption) setHighlightedAccount(highlightOption);
+      }
     }
   }, []);
 
@@ -154,7 +178,18 @@ const HledgerEditor: React.FC = () => {
     setTransactions(parseTransactions(newText));
   };
 
-  const sidePanelCollapsed = journalCollapsed && accountsCollapsed;
+  const handleFixedAccountChange = (option: AccountOption | null) => {
+    setFixedAccount(option);
+    localStorage.setItem(STORAGE_KEYS.FIXED_ACCOUNT, option?.value || "");
+  };
+
+  const handleHighlightedAccountChange = (option: AccountOption | null) => {
+    setHighlightedAccount(option);
+    localStorage.setItem(STORAGE_KEYS.HIGHLIGHTED_ACCOUNT, option?.value || "");
+  };
+
+  const sidePanelCollapsed =
+    journalCollapsed && accountsCollapsed && configCollapsed;
 
   return (
     <div className="max-w-[1440px] mx-auto p-4 min-h-screen">
@@ -168,7 +203,7 @@ const HledgerEditor: React.FC = () => {
       >
         <div>
           <div
-            className={`fixed ${sidePanelCollapsed ? "w-[200px]" : "w-[40vw]"}`}
+            className={`fixed ${sidePanelCollapsed ? "w-[200px]" : "w-[40vw]"} h-[calc(100vh_-_80px)] overflow-auto space-y-4 pr-2 pb-10`}
           >
             <div>
               <h2
@@ -213,6 +248,50 @@ const HledgerEditor: React.FC = () => {
                 />
               )}
             </div>
+
+            <div>
+              <h2
+                className="font-semibold mb-2 flex items-center cursor-pointer"
+                onClick={() => setConfigCollapsed(!configCollapsed)}
+              >
+                {configCollapsed ? (
+                  <ChevronRight className="w-4 h-4 mr-1" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 mr-1" />
+                )}
+                Config
+              </h2>
+              {!configCollapsed && (
+                <div className="space-y-4 text-sm">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Fixed account
+                    </label>
+                    <Select
+                      options={accountOptions}
+                      value={fixedAccount}
+                      onChange={handleFixedAccountChange}
+                      isClearable={true}
+                      placeholder="Select fixed account"
+                      className="w-[340px]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Highlight account
+                    </label>
+                    <Select
+                      options={accountOptions}
+                      value={highlightedAccount}
+                      onChange={handleHighlightedAccountChange}
+                      isClearable={true}
+                      placeholder="Select highlight account"
+                      className="w-[340px]"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
         <div>
@@ -228,28 +307,44 @@ const HledgerEditor: React.FC = () => {
                     key={aIndex}
                     className="flex items-center justify-between space-x-2 w-[420px]"
                   >
-                    <Select
-                      options={accountOptions}
-                      value={accountOptions.find(
-                        (option) => option.value === account.account,
-                      )}
-                      onChange={(option) =>
-                        updateAccount(tIndex, aIndex, option)
-                      }
-                      placeholder="Select account"
-                      className="w-[340px]"
-                      styles={{
-                        control: (baseStyles) => ({
-                          ...baseStyles,
-                          minHeight: "unset",
-                        }),
-                        dropdownIndicator: (baseStyles) => ({
-                          ...baseStyles,
-                          paddingTop: 0,
-                          paddingBottom: 0,
-                        }),
-                      }}
-                    />
+                    {fixedAccount?.value === account.account ? (
+                      <span className="w-[340px] py-1">{account.account}</span>
+                    ) : (
+                      <Select
+                        options={accountOptions}
+                        value={accountOptions.find(
+                          (option) => option.value === account.account,
+                        )}
+                        onChange={(option) =>
+                          updateAccount(tIndex, aIndex, option)
+                        }
+                        placeholder="Select account"
+                        className="w-[340px]"
+                        styles={{
+                          control: (baseStyles) => ({
+                            ...baseStyles,
+                            minHeight: "unset",
+                            backgroundColor:
+                              highlightedAccount?.value === account.account
+                                ? "lightblue"
+                                : baseStyles.backgroundColor,
+                            borderColor:
+                              highlightedAccount?.value === account.account
+                                ? "black"
+                                : baseStyles.borderColor,
+                            borderWidth:
+                              highlightedAccount?.value === account.account
+                                ? "2px"
+                                : baseStyles.borderWidth,
+                          }),
+                          dropdownIndicator: (baseStyles) => ({
+                            ...baseStyles,
+                            paddingTop: 0,
+                            paddingBottom: 0,
+                          }),
+                        }}
+                      />
+                    )}
                     <span className="font-mono text-sm">{account.amount}</span>
                   </div>
                 ))}
