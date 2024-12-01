@@ -161,10 +161,16 @@ const HledgerEditor: React.FC = () => {
     const transaction = updatedTransactions[transactionIndex];
     const accountLine = transaction.accounts[accountIndex];
     const spacesMatch = lines[accountLine.line].match(/^\s+/);
-    const spaces = spacesMatch ? spacesMatch[0] : "    ";
-    lines[accountLine.line] = `${spaces}${selectedOption.value}${" ".repeat(
-      Math.max(2, 30 - selectedOption.value.length),
-    )}${accountLine.amount}`;
+    const indent = spacesMatch ? spacesMatch[0] : "    ";
+    const originalLine = lines[accountLine.line];
+    const originalLength = originalLine.length;
+    const numSpaces =
+      originalLength -
+      indent.length -
+      selectedOption.value.length -
+      accountLine.amount.length;
+    lines[accountLine.line] =
+      `${indent}${selectedOption.value}${" ".repeat(Math.max(2, numSpaces))}${accountLine.amount}`;
     const newText = lines.join("\n");
     setInputText(newText);
     localStorage.setItem(STORAGE_KEYS.TRANSACTIONS_TEXT, newText);
